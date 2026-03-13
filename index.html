@@ -200,10 +200,47 @@ select { cursor: pointer; }
   gap: 10px; color: var(--dim); font-size: 14px; text-align: center;
 }
 .canvas-wrap { position: relative; display: inline-block; cursor: default; }
+
+/* Center guide lines — purely visual, not in exported PNG */
+.canvas-wrap::before,
+.canvas-wrap::after {
+  content: ''; position: absolute; pointer-events: none;
+  opacity: 0; transition: opacity .2s;
+}
+.canvas-wrap::before {
+  /* vertical center */
+  left: 50%; top: 0; bottom: 0;
+  width: 1px; background: rgba(74,144,226,.6);
+  transform: translateX(-0.5px);
+}
+.canvas-wrap::after {
+  /* horizontal center */
+  top: 50%; left: 0; right: 0;
+  height: 1px; background: rgba(74,144,226,.6);
+  transform: translateY(-0.5px);
+}
+.canvas-wrap:hover::before,
+.canvas-wrap:hover::after { opacity: 1; }
+.canvas-wrap.guides-on::before,
+.canvas-wrap.guides-on::after { opacity: 1; }
+
+/* Snap feedback — bright line + faster transition */
+.canvas-wrap::before,
+.canvas-wrap::after { transition: opacity .15s, background .1s, box-shadow .1s; }
+.canvas-wrap.snap-x::before {
+  opacity: 1 !important;
+  background: rgba(232,68,90,1);
+}
+.canvas-wrap.snap-y::after {
+  opacity: 1 !important;
+  background: rgba(232,68,90,1);
+}
+
 canvas {
   display: block; border-radius: 8px;
   box-shadow: 0 4px 32px rgba(0,0,0,.8);
   max-height: calc(100vh - 160px); max-width: 100%; width: auto;
+  image-rendering: auto;
 }
 canvas.grab { cursor: grab; }
 canvas.grabbing { cursor: grabbing; }
@@ -432,6 +469,7 @@ footer a { color: var(--accent); text-decoration: none; }
       <span class="info-txt" id="infoTxt"></span>
       <button class="btn sec" id="prevBtn" onclick="navImg(-1)" style="display:none">← Předchozí</button>
       <button class="btn sec" id="nextBtn" onclick="navImg(1)"  style="display:none">Další →</button>
+      <button class="btn sec" id="guidesBtn" onclick="toggleGuides()" title="Vodící čáry">＋</button>
       <button class="btn" id="dlBtn" onclick="download()">⬇️ Stáhnout PNG</button>
     </div>
   </main>
@@ -747,9 +785,26 @@ function onMove(e) {
   e.preventDefault();
   const { x: mx, y: my } = cvCoords(e);
   const l = layers.find(l => l.id === drag.id); if (!l) return;
-  l.x = Math.max(0, Math.min(1, drag.origX + (mx - drag.startMX) / targetW));
-  l.y = Math.max(0, Math.min(1, drag.origY + (my - drag.startMY) / targetH));
-  // Clear position grid active state while dragging
+
+  let nx = Math.max(0, Math.min(1, drag.origX + (mx - drag.startMX) / targetW));
+  let ny = Math.max(0, Math.min(1, drag.origY + (my - drag.startMY) / targetH));
+
+  // Snap threshold: 10 display-pixels converted to canvas fraction
+  const rect = canvas.getBoundingClientRect();
+  const thX = 10 / rect.width;
+  const thY = 10 / rect.height;
+
+  const snapX = Math.abs(nx - 0.5) < thX;
+  const snapY = Math.abs(ny - 0.5) < thY;
+  if (snapX) nx = 0.5;
+  if (snapY) ny = 0.5;
+
+  l.x = nx; l.y = ny;
+
+  const wrap = document.getElementById('canvasWrap');
+  wrap.classList.toggle('snap-x', snapX);
+  wrap.classList.toggle('snap-y', snapY);
+
   document.querySelectorAll('.pos-cell').forEach(c => c.classList.remove('active'));
   rerender();
 }
@@ -760,8 +815,9 @@ document.addEventListener('touchend', onUp);
 function onUp() {
   drag = null;
   canvas.classList.remove('grabbing');
-  // Update grab cursor based on hover
   canvas.classList.toggle('grab', layers.length > 0);
+  const wrap = document.getElementById('canvasWrap');
+  wrap.classList.remove('snap-x', 'snap-y');
 }
 
 canvas.addEventListener('mousemove', e => {
@@ -861,6 +917,8 @@ function drawTextLayers() {
 function rerender() {
   if (!img) return;
   canvas.width = targetW; canvas.height = targetH;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   drawBg();
 
   if (mode === 'pad') {
@@ -938,6 +996,14 @@ function loadImgAsync(file) {
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function toggleGuides() {
+  const wrap = document.getElementById('canvasWrap');
+  const btn  = document.getElementById('guidesBtn');
+  const on   = wrap.classList.toggle('guides-on');
+  btn.style.borderColor = on ? 'var(--accent)' : '';
+  btn.style.color       = on ? '#fff' : '';
+}
 
 function doDownload(origName) {
   const a = document.createElement('a');
