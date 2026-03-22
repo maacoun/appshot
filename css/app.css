@@ -279,3 +279,13 @@ footer a { color: var(--accent); text-decoration: none; }
 .lang-option:hover { background: rgba(255,255,255,.06); }
 .lang-option.active { color: var(--accent); }
 .flag-img { width: 20px; height: 15px; border-radius: 2px; object-fit: cover; flex-shrink: 0; }
+
+/* ── FRAME COLOR SWATCHES ── */
+.frame-colors { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 6px; }
+.frame-color-swatch {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--border); cursor: pointer;
+  transition: border-color .15s, transform .1s;
+}
+.frame-color-swatch:hover { border-color: #666; transform: scale(1.1); }
+.frame-color-swatch.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74,144,226,.35); }

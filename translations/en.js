@@ -41,4 +41,9 @@
   pos_mid:           'center',
   pos_bot:           'bottom',
   layer_text:        'Your text',
+  label_frame_device:'Device',
+  label_frame_color: 'Frame color',
+  mode_frame:        '🖼 Frame',
+  btn_save:          '💾 Save project',
+  btn_load:          '📂 Load project',
 };

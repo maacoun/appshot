@@ -41,4 +41,9 @@
   pos_mid:           'centro',
   pos_bot:           'abajo',
   layer_text:        'Tu texto',
+  label_frame_device:'Dispositivo',
+  label_frame_color: 'Color del marco',
+  mode_frame:        '🖼 Marco',
+  btn_save:          '💾 Guardar proyecto',
+  btn_load:          '📂 Cargar proyecto',
 };

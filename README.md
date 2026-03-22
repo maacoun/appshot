@@ -11,7 +11,8 @@ No server, no upload, no account — everything runs locally in your browser.
 
 - **App Store & Google Play sizes** — iPhone 6.7", 6.5", iPad 12.9", 11", Android phone & tablet
 - **Custom size** — enter any width × height
-- **4 layout modes** — Pad (letterbox), Phone on Background, Stretch, Crop
+- **5 layout modes** — Pad (letterbox), Phone on Background, **Device Frame**, Stretch, Crop
+- **Realistic device frames** — iPhone 13 (5 colors) and iPad (3 colors)
 - **Rich backgrounds** — solid colors, 5 gradient presets, custom color picker, custom image
 - **Text overlay editor** — multiple text layers with:
   - Font family, size, color
@@ -20,6 +21,7 @@ No server, no upload, no account — everything runs locally in your browser.
   - Drag to reposition on canvas
   - 9-point position grid
   - Per-layer opacity
+- **Save / load project** — export and re-import your work as JSON
 - **Batch export** — drop multiple screenshots, download all in one click
 - **PNG output** — full resolution, ready for store submission
 
@@ -41,6 +43,11 @@ No server, no upload, no account — everything runs locally in your browser.
 ## Contributing
 
 PRs welcome. The entire app is a single `index.html` file — no build step, no dependencies.
+
+## Credits
+
+- Device frame images by [Facebook Design](https://design.facebook.com/toolsandresources/devices/) — licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- Flag images by [flagcdn.com](https://flagcdn.com)
 
 ## License
 

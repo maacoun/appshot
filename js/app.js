@@ -48,6 +48,12 @@ let bgValue = '#000000';
 let bgImg = null;
 let phoneScale = 0.72, phonePosY = 0.5;
 
+// Frame state
+let frameDevice = 'iphone13';
+let frameColor  = 'midnight';
+let frameImg    = null;
+const frameCache = {};
+
 let layers = [], selId = null, layerSeq = 0;
 let drag = null;
 
@@ -136,7 +142,81 @@ function setMode(el) {
   el.classList.add('active');
   mode = el.dataset.mode;
   document.getElementById('scaleRow').style.display = mode === 'phone_on_bg' ? 'block' : 'none';
+  document.getElementById('cardFrame').style.display = mode === 'frame' ? 'block' : 'none';
+  if (mode === 'frame' && !frameImg) loadFrameImg();
   rerender();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DEVICE FRAMES
+═══════════════════════════════════════════════════════════ */
+function loadFrameImg(cb) {
+  const def = FRAMES[frameDevice];
+  const path = def.path(frameColor);
+  if (frameCache[path]) { frameImg = frameCache[path]; if (cb) cb(); rerender(); return; }
+  const tmp = new Image();
+  tmp.onload = () => { frameCache[path] = tmp; frameImg = tmp; if (cb) cb(); rerender(); };
+  tmp.onerror = () => { frameImg = null; rerender(); };
+  tmp.src = path;
+}
+
+function setFrameDevice(id) {
+  frameDevice = id;
+  frameColor = FRAMES[id].colors[0].id;
+  renderFrameColorPicker();
+  frameImg = null;
+  loadFrameImg();
+  // update device button active state
+  document.querySelectorAll('.frame-device-btn').forEach(b => b.classList.toggle('active', b.dataset.device === id));
+}
+
+function setFrameColor(id) {
+  frameColor = id;
+  frameImg = null;
+  loadFrameImg();
+  document.querySelectorAll('.frame-color-swatch').forEach(s => s.classList.toggle('active', s.dataset.color === id));
+}
+
+function renderFrameColorPicker() {
+  const def = FRAMES[frameDevice];
+  const container = document.getElementById('frameColors');
+  container.innerHTML = '';
+  def.colors.forEach(c => {
+    const s = document.createElement('div');
+    s.className = 'frame-color-swatch' + (c.id === frameColor ? ' active' : '');
+    s.dataset.color = c.id;
+    s.title = c.label;
+    s.style.background = c.hex;
+    s.onclick = () => setFrameColor(c.id);
+    container.appendChild(s);
+  });
+}
+
+function drawInFrame() {
+  const def = FRAMES[frameDevice];
+  if (!def) return;
+
+  // Scale frame to fit canvas (letterbox)
+  const sc = Math.min(targetW / def.frameW, targetH / def.frameH);
+  const fw = def.frameW * sc, fh = def.frameH * sc;
+  const fx = (targetW - fw) / 2, fy = (targetH - fh) / 2;
+
+  // Screen area in canvas px
+  const sx = fx + def.screen.x * fw;
+  const sy = fy + def.screen.y * fh;
+  const sw = def.screen.w * fw;
+  const sh = def.screen.h * fh;
+
+  if (img) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(sx, sy, sw, sh); ctx.clip();
+    const isc = Math.max(sw / img.width, sh / img.height);
+    const iw = img.width * isc, ih = img.height * isc;
+    ctx.drawImage(img, sx + (sw - iw) / 2, sy + (sh - ih) / 2, iw, ih);
+    ctx.restore();
+  }
+
+  if (frameImg) ctx.drawImage(frameImg, fx, fy, fw, fh);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -496,6 +576,9 @@ function rerender() {
     const sc = Math.max(targetW / img.width, targetH / img.height);
     const w = img.width*sc, h = img.height*sc;
     ctx.drawImage(img, (targetW-w)/2, (targetH-h)/2, w, h);
+
+  } else if (mode === 'frame') {
+    drawInFrame();
   }
 
   drawTextLayers();
@@ -564,15 +647,91 @@ function doDownload(origName) {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   SAVE / LOAD PROJECT
+═══════════════════════════════════════════════════════════ */
+function saveProject() {
+  const state = {
+    version: 1,
+    targetW, targetH, mode, bgValue,
+    phoneScale, phonePosY,
+    frameDevice, frameColor,
+    layers: layers.map(l => ({ ...l })),
+  };
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.download = 'appshot-project.json';
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function loadProject() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try { applyProjectState(JSON.parse(ev.target.result)); }
+      catch { alert('Invalid project file'); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function applyProjectState(s) {
+  if (!s || s.version !== 1) { alert('Unsupported project version'); return; }
+  targetW = s.targetW || 1290;
+  targetH = s.targetH || 2796;
+  mode    = s.mode    || 'pad';
+  bgValue = s.bgValue || '#000000';
+  phoneScale = s.phoneScale ?? 0.72;
+  phonePosY  = s.phonePosY  ?? 0.5;
+  frameDevice = s.frameDevice || 'iphone13';
+  frameColor  = s.frameColor  || 'midnight';
+  layers = (s.layers || []).map(l => ({ ...l, id: ++layerSeq }));
+  selId  = null;
+
+  // Sync UI
+  document.getElementById('scaleRow').style.display = mode === 'phone_on_bg' ? 'block' : 'none';
+  document.getElementById('cardFrame').style.display = mode === 'frame' ? 'block' : 'none';
+  document.getElementById('phoneScale').value = Math.round(phoneScale * 100);
+  document.getElementById('scaleVal').textContent = Math.round(phoneScale * 100) + '%';
+  document.getElementById('phoneY').value = Math.round(phonePosY * 100);
+  document.getElementById('posYVal').textContent = phonePosY < 0.35 ? t('pos_top') : phonePosY > 0.65 ? t('pos_bot') : t('pos_mid');
+  document.getElementById('bgColor').value = bgValue.startsWith('#') ? bgValue : '#000000';
+
+  document.querySelectorAll('#modeChips .chip').forEach(c => c.classList.toggle('active', c.dataset.mode === mode));
+  document.querySelectorAll('#deviceChips .chip').forEach(c => {
+    c.classList.toggle('active', +c.dataset.w === targetW && +c.dataset.h === targetH);
+  });
+
+  renderFrameColorPicker();
+  document.querySelectorAll('.frame-device-btn').forEach(b => b.classList.toggle('active', b.dataset.device === frameDevice));
+
+  if (mode === 'frame') { frameImg = null; loadFrameImg(); }
+  renderList();
+  renderEditPanel();
+  if (img) rerender();
+}
+
+/* ═══════════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════════ */
 applyLang(currentLang);
+
+// Init frame color picker
+renderFrameColorPicker();
 
 // Expose to HTML event handlers
 Object.assign(window, {
   applyLang, toggleLangMenu,
   setDevice, applyCustomSize,
   setMode, setBgPreset, setBgCustom, updateScale, updatePosY,
+  setFrameDevice, setFrameColor,
   addLayer, deleteLayer, selLayer, updateLayer, toggleProp, setAlign, setPos,
   navImg, download, toggleGuides,
+  saveProject, loadProject,
 });

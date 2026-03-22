@@ -41,4 +41,9 @@
   pos_mid:           'centre',
   pos_bot:           'bas',
   layer_text:        'Votre texte',
+  label_frame_device:'Appareil',
+  label_frame_color: 'Couleur du cadre',
+  mode_frame:        '🖼 Cadre',
+  btn_save:          '💾 Enregistrer le projet',
+  btn_load:          '📂 Charger le projet',
 };

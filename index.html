@@ -75,6 +75,7 @@
       <div class="chip-group" id="modeChips">
         <div class="chip active" data-mode="pad" onclick="setMode(this)" data-i18n="mode_pad">Okraje</div>
         <div class="chip" data-mode="phone_on_bg" onclick="setMode(this)" data-i18n="mode_phone">📱 Mobil na BG</div>
+        <div class="chip" data-mode="frame" onclick="setMode(this)" data-i18n="mode_frame">🖼 Rámeček</div>
         <div class="chip" data-mode="stretch" onclick="setMode(this)" data-i18n="mode_stretch">Roztáhnout</div>
         <div class="chip" data-mode="crop" onclick="setMode(this)" data-i18n="mode_crop">Oříznout</div>
       </div>
@@ -111,6 +112,20 @@
         <input type="color" id="bgColor" value="#000000" oninput="setBgCustom(this.value)">
       </div>
       <input type="file" id="bgImgInput" accept="image/*" style="display:none">
+    </div>
+
+    <!-- Device frame controls -->
+    <div class="card" id="cardFrame" style="display:none">
+      <div class="section-label" data-i18n="label_frame_device">Zařízení</div>
+      <div class="chip-group" style="margin-bottom:10px">
+        <div class="chip frame-device-btn active" data-device="iphone13" onclick="setFrameDevice('iphone13')">iPhone 13</div>
+        <div class="chip frame-device-btn" data-device="ipad" onclick="setFrameDevice('ipad')">iPad</div>
+      </div>
+      <div class="section-label" data-i18n="label_frame_color">Barva rámečku</div>
+      <div class="frame-colors" id="frameColors"></div>
+      <div style="font-size:10px;color:var(--dim);margin-top:8px">
+        Frames by <a href="https://design.facebook.com/toolsandresources/devices/" target="_blank" rel="noopener" style="color:var(--accent)">Facebook Design</a> (CC BY 4.0)
+      </div>
     </div>
 
     <!-- Text layers -->
@@ -222,6 +237,8 @@
       <button class="btn sec" id="prevBtn" onclick="navImg(-1)" style="display:none" data-i18n="btn_prev">← Předchozí</button>
       <button class="btn sec" id="nextBtn" onclick="navImg(1)"  style="display:none" data-i18n="btn_next">Další →</button>
       <button class="btn sec" id="guidesBtn" onclick="toggleGuides()" title="Vodící čáry">＋</button>
+      <button class="btn sec" onclick="saveProject()" data-i18n="btn_save">💾 Uložit projekt</button>
+      <button class="btn sec" onclick="loadProject()" data-i18n="btn_load">📂 Načíst projekt</button>
       <button class="btn" id="dlBtn" onclick="download()">⬇️ Stáhnout PNG</button>
     </div>
   </main>
@@ -238,6 +255,7 @@
 <script src="translations/fr.js"></script>
 <script src="translations/es.js"></script>
 <script src="js/i18n.js"></script>
+<script src="js/frames.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

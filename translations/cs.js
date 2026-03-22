@@ -41,4 +41,9 @@
   pos_mid:           'střed',
   pos_bot:           'dolů',
   layer_text:        'Váš text',
+  label_frame_device: 'Zařízení',
+  label_frame_color:  'Barva rámečku',
+  mode_frame:         '🖼 Rámeček',
+  btn_save:           '💾 Uložit projekt',
+  btn_load:           '📂 Načíst projekt',
 };
