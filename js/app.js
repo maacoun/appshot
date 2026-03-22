@@ -216,7 +216,11 @@ function drawInFrame() {
     ctx.restore();
   }
 
-  if (frameImg) ctx.drawImage(frameImg, fx, fy, fw, fh);
+  if (frameImg) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(frameImg, fx, fy, fw, fh);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
