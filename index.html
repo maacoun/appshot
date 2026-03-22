@@ -5,283 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AppShot — App Store Screenshot Generator</title>
 <meta name="description" content="Free, open-source browser tool to generate App Store & Google Play screenshots. Add text overlays, pick layouts, export PNG. No data leaves your browser.">
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg: #0d0d0d;
-  --surface: #1a1a1a;
-  --surface2: #222;
-  --border: #2a2a2a;
-  --accent: #4a90e2;
-  --accent-hover: #357abd;
-  --text: #fff;
-  --muted: #888;
-  --dim: #555;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* ── HEADER ── */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  flex-shrink: 0;
-}
-.header h1 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 7px; }
-.header .tag { font-size: 12px; color: var(--muted); font-weight: 400; }
-.gh-btn {
-  display: flex; align-items: center; gap: 6px;
-  color: var(--muted); text-decoration: none; font-size: 12px;
-  padding: 5px 11px; border-radius: 8px; border: 1px solid var(--border);
-  transition: all .15s;
-}
-.gh-btn:hover { border-color: var(--accent); color: var(--text); }
-
-/* ── LAYOUT ── */
-.app-layout { display: flex; flex: 1; overflow: hidden; }
-
-.sidebar {
-  width: 350px; min-width: 300px; flex-shrink: 0;
-  overflow-y: auto; padding: 14px;
-  display: flex; flex-direction: column; gap: 10px;
-  border-right: 1px solid var(--border);
-}
-
-.preview-area {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 20px; background: #080808; overflow: auto; gap: 14px;
-}
-
-@media (max-width: 680px) {
-  body { height: auto; overflow: auto; }
-  .app-layout { flex-direction: column; overflow: visible; }
-  .sidebar { width: 100%; min-width: 0; border-right: none; border-bottom: 1px solid var(--border); overflow-y: visible; }
-  .preview-area { padding: 14px; }
-}
-
-/* ── DROP ZONE ── */
-.drop-zone {
-  border: 2px dashed var(--border); border-radius: 14px;
-  padding: 26px 14px; text-align: center; cursor: pointer;
-  background: var(--surface); transition: border-color .2s, background .2s;
-}
-.drop-zone:hover, .drop-zone.drag { border-color: var(--accent); background: #152030; }
-.drop-zone input { display: none; }
-.drop-zone p { font-size: 13px; color: var(--muted); }
-.drop-zone .hint { font-size: 11px; color: var(--dim); margin-top: 4px; }
-.drop-zone span { color: var(--accent); font-weight: 600; }
-.drop-icon { font-size: 28px; margin-bottom: 7px; }
-
-/* ── CARD ── */
-.card {
-  background: var(--surface); border-radius: 12px;
-  padding: 13px; display: none;
-}
-.card.vis { display: block; }
-
-.section-label {
-  font-size: 10px; font-weight: 700; color: var(--dim);
-  text-transform: uppercase; letter-spacing: .7px; margin-bottom: 9px;
-}
-
-/* ── CHIPS ── */
-.chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
-.chip {
-  padding: 5px 11px; border-radius: 20px;
-  border: 1px solid var(--border); background: #111;
-  color: var(--muted); cursor: pointer; font-size: 12px;
-  transition: all .15s; line-height: 1.4; user-select: none;
-}
-.chip:hover { border-color: #444; color: var(--text); }
-.chip.active { border-color: var(--accent); background: #1a3a6e; color: #fff; }
-.chip small { display: block; font-size: 9px; color: #666; }
-
-/* ── DIVIDER ── */
-.divider { height: 1px; background: var(--border); margin: 11px 0; }
-
-/* ── ROWS / INPUTS ── */
-.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.row label { font-size: 12px; color: var(--muted); flex-shrink: 0; }
-input[type=color] {
-  width: 30px; height: 30px; border: 1px solid var(--border);
-  border-radius: 6px; cursor: pointer; background: none; padding: 2px; flex-shrink: 0;
-}
-input[type=range] { flex: 1; accent-color: var(--accent); min-width: 70px; }
-.val { font-size: 12px; color: var(--muted); min-width: 34px; text-align: right; }
-
-input[type=number], select, textarea {
-  background: #111; border: 1px solid var(--border); border-radius: 8px;
-  color: var(--text); font-size: 12px; padding: 6px 9px; font-family: inherit;
-}
-input[type=number]:focus, select:focus, textarea:focus {
-  outline: none; border-color: var(--accent);
-}
-textarea { resize: vertical; min-height: 52px; width: 100%; line-height: 1.5; }
-select { cursor: pointer; }
-
-/* ── CUSTOM SIZE ── */
-.size-row { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
-.size-row input[type=number] { width: 74px; }
-.size-row span { color: var(--muted); font-size: 12px; }
-
-/* ── ICON BUTTONS ── */
-.icon-btn-group { display: flex; gap: 5px; }
-.icon-btn {
-  padding: 5px 10px; border-radius: 7px;
-  border: 1px solid var(--border); background: #111;
-  color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 700;
-  transition: all .15s; user-select: none;
-}
-.icon-btn:hover { border-color: #444; color: var(--text); }
-.icon-btn.active { border-color: var(--accent); background: #1a3a6e; color: #fff; }
-
-/* ── TEXT LAYERS ── */
-.layer-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 9px; }
-.layer-item {
-  display: flex; align-items: center; gap: 7px;
-  padding: 7px 9px; background: #111;
-  border: 1px solid var(--border); border-radius: 8px;
-  cursor: pointer; transition: border-color .15s;
-}
-.layer-item.sel { border-color: var(--accent); }
-.layer-item .lname { flex: 1; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.layer-item .ldel { color: #e05; cursor: pointer; font-size: 17px; padding: 0 3px; flex-shrink: 0; line-height: 1; }
-.layer-item .ldel:hover { color: #f55; }
-
-/* ── EDIT PANEL ── */
-.edit-panel { display: none; padding: 10px 0 2px; }
-.edit-panel.vis { display: block; }
-.ep-row { margin-bottom: 8px; }
-.ep-row .section-label { margin-bottom: 6px; }
-
-/* ── POSITION GRID ── */
-.pos-grid {
-  display: grid; grid-template-columns: repeat(3, 28px);
-  gap: 3px;
-}
-.pos-cell {
-  width: 28px; height: 28px; border-radius: 6px;
-  border: 1px solid var(--border); background: #111;
-  cursor: pointer; transition: all .15s;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 10px; color: #555; user-select: none;
-}
-.pos-cell:hover { border-color: #444; color: #aaa; }
-.pos-cell.active { border-color: var(--accent); background: #1a3a6e; color: #fff; }
-
-/* ── ADD TEXT BTN ── */
-.add-txt-btn {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 8px; border-radius: 9px;
-  border: 1px dashed var(--border); background: transparent;
-  color: var(--muted); cursor: pointer; font-size: 12px; width: 100%;
-  transition: all .15s;
-}
-.add-txt-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-/* ── PREVIEW ── */
-.placeholder {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 10px; color: var(--dim); font-size: 14px; text-align: center;
-}
-.canvas-wrap { position: relative; display: inline-block; cursor: default; }
-
-/* Center guide lines — purely visual, not in exported PNG */
-.canvas-wrap::before,
-.canvas-wrap::after {
-  content: ''; position: absolute; pointer-events: none;
-  opacity: 0; transition: opacity .2s;
-}
-.canvas-wrap::before {
-  /* vertical center */
-  left: 50%; top: 0; bottom: 0;
-  width: 1px; background: rgba(74,144,226,.6);
-  transform: translateX(-0.5px);
-}
-.canvas-wrap::after {
-  /* horizontal center */
-  top: 50%; left: 0; right: 0;
-  height: 1px; background: rgba(74,144,226,.6);
-  transform: translateY(-0.5px);
-}
-.canvas-wrap:hover::before,
-.canvas-wrap:hover::after { opacity: 1; }
-.canvas-wrap.guides-on::before,
-.canvas-wrap.guides-on::after { opacity: 1; }
-
-/* Snap feedback — bright line + faster transition */
-.canvas-wrap::before,
-.canvas-wrap::after { transition: opacity .15s, background .1s, box-shadow .1s; }
-.canvas-wrap.snap-x::before {
-  opacity: 1 !important;
-  background: rgba(232,68,90,1);
-}
-.canvas-wrap.snap-y::after {
-  opacity: 1 !important;
-  background: rgba(232,68,90,1);
-}
-
-canvas {
-  display: block; border-radius: 8px;
-  box-shadow: 0 4px 32px rgba(0,0,0,.8);
-  max-height: calc(100vh - 160px); max-width: 100%; width: auto;
-  image-rendering: auto;
-}
-canvas.grab { cursor: grab; }
-canvas.grabbing { cursor: grabbing; }
-
-/* ── BOTTOM BAR ── */
-.btm { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; justify-content: center; }
-.btn {
-  padding: 10px 20px; background: var(--accent);
-  color: #fff; font-size: 13px; font-weight: 700;
-  border: none; border-radius: 10px; cursor: pointer;
-  transition: background .2s; white-space: nowrap;
-}
-.btn:hover { background: var(--accent-hover); }
-.btn.sec {
-  background: var(--surface); border: 1px solid var(--border);
-  color: var(--muted);
-}
-.btn.sec:hover { border-color: #444; color: var(--text); background: var(--surface2); }
-.info-txt { font-size: 11px; color: var(--dim); }
-
-/* ── FOOTER ── */
-footer {
-  padding: 8px 18px; text-align: center; font-size: 11px;
-  color: var(--dim); border-top: 1px solid var(--border);
-  flex-shrink: 0;
-}
-footer a { color: var(--accent); text-decoration: none; }
-</style>
+<link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 
 <!-- HEADER -->
 <header class="header">
   <h1>📱 AppShot <span class="tag">— App Store Screenshot Generator</span></h1>
-  <!-- Update href to your GitHub repo URL -->
-  <a class="gh-btn" href="https://github.com/maacoun/appshot" target="_blank" rel="noopener">
+  <div class="header-right">
+    <div class="lang-dropdown" id="langDropdown">
+      <button class="lang-selected" onclick="toggleLangMenu()">
+        <img id="langFlag" class="flag-img" src="https://flagcdn.com/20x15/cz.png" alt="CS">
+        <span id="langCode">CS</span>
+        <span class="lang-arrow">▾</span>
+      </button>
+      <div class="lang-menu">
+        <div class="lang-option" data-lang="cs" onclick="applyLang('cs')"><img class="flag-img" src="https://flagcdn.com/20x15/cz.png" alt=""> Čeština</div>
+        <div class="lang-option" data-lang="en" onclick="applyLang('en')"><img class="flag-img" src="https://flagcdn.com/20x15/gb.png" alt=""> English</div>
+        <div class="lang-option" data-lang="de" onclick="applyLang('de')"><img class="flag-img" src="https://flagcdn.com/20x15/de.png" alt=""> Deutsch</div>
+        <div class="lang-option" data-lang="fr" onclick="applyLang('fr')"><img class="flag-img" src="https://flagcdn.com/20x15/fr.png" alt=""> Français</div>
+        <div class="lang-option" data-lang="es" onclick="applyLang('es')"><img class="flag-img" src="https://flagcdn.com/20x15/es.png" alt=""> Español</div>
+      </div>
+    </div>
+    <a class="gh-btn" href="https://github.com/maacoun/appshot" target="_blank" rel="noopener">
     <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
       <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
     </svg>
     GitHub
-  </a>
+    </a>
+  </div>
 </header>
 
 <div class="app-layout">
@@ -293,13 +45,13 @@ footer a { color: var(--accent); text-decoration: none; }
     <div class="drop-zone" id="dropZone">
       <input type="file" id="fileInput" accept="image/*" multiple>
       <div class="drop-icon">🖼️</div>
-      <p>Přetáhni screenshot sem<br>nebo <span>klikni pro výběr</span></p>
-      <p class="hint">Více souborů najednou OK</p>
+      <p data-i18n-html="drop_title">Přetáhni screenshot sem<br>nebo <span>klikni pro výběr</span></p>
+      <p class="hint" data-i18n="drop_hint">Více souborů najednou OK</p>
     </div>
 
     <!-- Device -->
     <div class="card" id="cardDevice">
-      <div class="section-label">Cílové zařízení</div>
+      <div class="section-label" data-i18n="label_device">Cílové zařízení</div>
       <div class="chip-group" id="deviceChips">
         <div class="chip active" data-w="1290" data-h="2796" onclick="setDevice(this)">iPhone 6.7"<small>1290×2796</small></div>
         <div class="chip" data-w="1242" data-h="2688" onclick="setDevice(this)">iPhone 6.5"<small>1242×2688</small></div>
@@ -307,34 +59,34 @@ footer a { color: var(--accent); text-decoration: none; }
         <div class="chip" data-w="1668" data-h="2388" onclick="setDevice(this)">iPad 11"<small>1668×2388</small></div>
         <div class="chip" data-w="1080" data-h="1920" onclick="setDevice(this)">Android<small>1080×1920</small></div>
         <div class="chip" data-w="1200" data-h="1920" onclick="setDevice(this)">Android Tab<small>1200×1920</small></div>
-        <div class="chip" data-w="0" data-h="0" onclick="setDevice(this)">Vlastní</div>
+        <div class="chip" data-w="0" data-h="0" onclick="setDevice(this)" data-i18n="chip_custom">Vlastní</div>
       </div>
       <div class="size-row" id="customSizeRow" style="display:none">
-        <input type="number" id="customW" placeholder="Šířka" min="100" max="9999" value="1290">
+        <input type="number" id="customW" placeholder="Šířka" data-i18n-ph="ph_w" min="100" max="9999" value="1290">
         <span>×</span>
-        <input type="number" id="customH" placeholder="Výška" min="100" max="9999" value="2796">
+        <input type="number" id="customH" placeholder="Výška" data-i18n-ph="ph_h" min="100" max="9999" value="2796">
         <button class="icon-btn" onclick="applyCustomSize()" style="padding:6px 10px">OK</button>
       </div>
     </div>
 
     <!-- Layout + Background -->
     <div class="card" id="cardMode">
-      <div class="section-label">Způsob umístění</div>
+      <div class="section-label" data-i18n="label_mode">Způsob umístění</div>
       <div class="chip-group" id="modeChips">
-        <div class="chip active" data-mode="pad" onclick="setMode(this)">Okraje</div>
-        <div class="chip" data-mode="phone_on_bg" onclick="setMode(this)">📱 Mobil na BG</div>
-        <div class="chip" data-mode="stretch" onclick="setMode(this)">Roztáhnout</div>
-        <div class="chip" data-mode="crop" onclick="setMode(this)">Oříznout</div>
+        <div class="chip active" data-mode="pad" onclick="setMode(this)" data-i18n="mode_pad">Okraje</div>
+        <div class="chip" data-mode="phone_on_bg" onclick="setMode(this)" data-i18n="mode_phone">📱 Mobil na BG</div>
+        <div class="chip" data-mode="stretch" onclick="setMode(this)" data-i18n="mode_stretch">Roztáhnout</div>
+        <div class="chip" data-mode="crop" onclick="setMode(this)" data-i18n="mode_crop">Oříznout</div>
       </div>
 
       <div id="scaleRow" style="display:none">
         <div class="divider"></div>
-        <div class="section-label">Velikost mobilu</div>
+        <div class="section-label" data-i18n="label_phone_size">Velikost mobilu</div>
         <div class="row">
           <input type="range" id="phoneScale" min="40" max="95" value="72" oninput="updateScale(this.value)">
           <span class="val" id="scaleVal">72%</span>
         </div>
-        <div class="section-label" style="margin-top:9px">Vertikální pozice</div>
+        <div class="section-label" style="margin-top:9px" data-i18n="label_vert_pos">Vertikální pozice</div>
         <div class="row">
           <input type="range" id="phoneY" min="0" max="100" value="50" oninput="updatePosY(this.value)">
           <span class="val" id="posYVal">střed</span>
@@ -342,20 +94,20 @@ footer a { color: var(--accent); text-decoration: none; }
       </div>
 
       <div class="divider"></div>
-      <div class="section-label">Pozadí</div>
+      <div class="section-label" data-i18n="label_bg">Pozadí</div>
       <div class="chip-group" id="bgPresets">
-        <div class="chip active" data-color="#000000" onclick="setBgPreset(this,'#000000')" style="background:#000;border-color:#444">Černé</div>
-        <div class="chip" data-color="#ffffff" onclick="setBgPreset(this,'#ffffff')" style="background:#fff;color:#111">Bílé</div>
+        <div class="chip active" data-color="#000000" onclick="setBgPreset(this,'#000000')" style="background:#000;border-color:#444" data-i18n="bg_black">Černé</div>
+        <div class="chip" data-color="#ffffff" onclick="setBgPreset(this,'#ffffff')" style="background:#fff;color:#111" data-i18n="bg_white">Bílé</div>
         <div class="chip" data-color="#1a1a2e" onclick="setBgPreset(this,'#1a1a2e')" style="background:#1a1a2e">Navy</div>
         <div class="chip" data-color="grad1" onclick="setBgPreset(this,'grad1')">🌊 Ocean</div>
         <div class="chip" data-color="grad2" onclick="setBgPreset(this,'grad2')">🌅 Sunset</div>
         <div class="chip" data-color="grad3" onclick="setBgPreset(this,'grad3')">🌿 Forest</div>
         <div class="chip" data-color="grad4" onclick="setBgPreset(this,'grad4')">💜 Purple</div>
         <div class="chip" data-color="grad5" onclick="setBgPreset(this,'grad5')">🖤 Carbon</div>
-        <div class="chip" data-color="bgimg" onclick="setBgPreset(this,'bgimg');document.getElementById('bgImgInput').click()">🖼️ Obrázek</div>
+        <div class="chip" data-color="bgimg" onclick="setBgPreset(this,'bgimg');document.getElementById('bgImgInput').click()" data-i18n="bg_image">🖼️ Obrázek</div>
       </div>
       <div class="row">
-        <label>Vlastní:</label>
+        <label data-i18n="label_custom_color">Vlastní:</label>
         <input type="color" id="bgColor" value="#000000" oninput="setBgCustom(this.value)">
       </div>
       <input type="file" id="bgImgInput" accept="image/*" style="display:none">
@@ -363,18 +115,18 @@ footer a { color: var(--accent); text-decoration: none; }
 
     <!-- Text layers -->
     <div class="card" id="cardText">
-      <div class="section-label">Textové vrstvy</div>
+      <div class="section-label" data-i18n="label_layers">Textové vrstvy</div>
       <div class="layer-list" id="layerList"></div>
 
       <!-- Edit panel (shown when a layer is selected) -->
       <div class="edit-panel" id="editPanel">
         <div class="ep-row">
-          <div class="section-label">Text</div>
-          <textarea id="epText" rows="2" placeholder="Váš text..." oninput="updateLayer('text',this.value)"></textarea>
+          <div class="section-label" data-i18n="label_text">Text</div>
+          <textarea id="epText" rows="2" placeholder="Váš text..." data-i18n-ph="ph_text" oninput="updateLayer('text',this.value)"></textarea>
         </div>
 
         <div class="ep-row">
-          <div class="section-label">Písmo</div>
+          <div class="section-label" data-i18n="label_font">Písmo</div>
           <div class="row" style="margin-top:0">
             <select id="epFont" onchange="updateLayer('fontFamily',this.value)" style="flex:1;font-size:12px">
               <option value="system-ui,sans-serif">System UI</option>
@@ -390,7 +142,7 @@ footer a { color: var(--accent); text-decoration: none; }
         </div>
 
         <div class="ep-row">
-          <div class="section-label">Velikost</div>
+          <div class="section-label" data-i18n="label_size">Velikost</div>
           <div class="row" style="margin-top:0">
             <input type="range" id="epSize" min="1" max="22" value="5" step="0.5"
               oninput="updateLayer('fontSize',this.value/100);document.getElementById('epSizeVal').textContent=Math.round(this.value)+'%'">
@@ -399,7 +151,7 @@ footer a { color: var(--accent); text-decoration: none; }
         </div>
 
         <div class="ep-row">
-          <div class="section-label">Styl &amp; zarovnání</div>
+          <div class="section-label" data-i18n="label_style">Styl &amp; zarovnání</div>
           <div class="row" style="margin-top:0;gap:6px">
             <div class="icon-btn-group">
               <button class="icon-btn" id="btnB" onclick="toggleProp('bold')"><b>B</b></button>
@@ -416,13 +168,13 @@ footer a { color: var(--accent); text-decoration: none; }
         </div>
 
         <div class="ep-row">
-          <div class="section-label">Barva &amp; průhlednost</div>
+          <div class="section-label" data-i18n="label_color">Barva &amp; průhlednost</div>
           <div class="row" style="margin-top:0">
-            <label>Barva:</label>
+            <label data-i18n="lbl_color">Barva:</label>
             <input type="color" id="epColor" value="#ffffff" oninput="updateLayer('color',this.value)">
-            <label>Stín:</label>
+            <label data-i18n="lbl_shadow">Stín:</label>
             <input type="color" id="epShadowColor" value="#000000" oninput="updateLayer('shadowColor',this.value)">
-            <label style="margin-left:4px">Alpha:</label>
+            <label style="margin-left:4px" data-i18n="lbl_alpha">Alpha:</label>
             <input type="range" id="epOpacity" min="10" max="100" value="100"
               oninput="updateLayer('opacity',this.value/100);document.getElementById('epOpVal').textContent=this.value+'%'">
             <span class="val" id="epOpVal">100%</span>
@@ -430,7 +182,7 @@ footer a { color: var(--accent); text-decoration: none; }
         </div>
 
         <div class="ep-row">
-          <div class="section-label">Pozice</div>
+          <div class="section-label" data-i18n="label_pos">Pozice</div>
           <div style="display:flex;align-items:center;gap:10px;margin-top:0">
             <div class="pos-grid" id="posGrid">
               <div class="pos-cell" data-px="0.08" data-py="0.08" onclick="setPos(this)">↖</div>
@@ -443,12 +195,12 @@ footer a { color: var(--accent); text-decoration: none; }
               <div class="pos-cell" data-px="0.5"  data-py="0.92" onclick="setPos(this)">↓</div>
               <div class="pos-cell" data-px="0.92" data-py="0.92" onclick="setPos(this)">↘</div>
             </div>
-            <span style="font-size:11px;color:var(--dim);line-height:1.5">nebo táhni<br>na plátně</span>
+            <span style="font-size:11px;color:var(--dim);line-height:1.5" data-i18n-html="drag_hint">nebo táhni<br>na plátně</span>
           </div>
         </div>
       </div>
 
-      <button class="add-txt-btn" onclick="addLayer()">+ Přidat text</button>
+      <button class="add-txt-btn" onclick="addLayer()" data-i18n="btn_add_text">+ Přidat text</button>
     </div>
 
   </aside>
@@ -457,8 +209,8 @@ footer a { color: var(--accent); text-decoration: none; }
   <main class="preview-area" id="previewArea">
     <div class="placeholder" id="placeholder">
       <div style="font-size:52px">📱</div>
-      <div>Načti screenshot pro začátek</div>
-      <div style="font-size:12px">PNG, JPG, WebP — žádná data neopouštějí tvůj prohlížeč</div>
+      <div data-i18n="ph_msg">Načti screenshot pro začátek</div>
+      <div style="font-size:12px" data-i18n="ph_privacy">PNG, JPG, WebP — žádná data neopouštějí tvůj prohlížeč</div>
     </div>
 
     <div class="canvas-wrap" id="canvasWrap" style="display:none">
@@ -467,8 +219,8 @@ footer a { color: var(--accent); text-decoration: none; }
 
     <div class="btm" id="btm" style="display:none">
       <span class="info-txt" id="infoTxt"></span>
-      <button class="btn sec" id="prevBtn" onclick="navImg(-1)" style="display:none">← Předchozí</button>
-      <button class="btn sec" id="nextBtn" onclick="navImg(1)"  style="display:none">Další →</button>
+      <button class="btn sec" id="prevBtn" onclick="navImg(-1)" style="display:none" data-i18n="btn_prev">← Předchozí</button>
+      <button class="btn sec" id="nextBtn" onclick="navImg(1)"  style="display:none" data-i18n="btn_next">Další →</button>
       <button class="btn sec" id="guidesBtn" onclick="toggleGuides()" title="Vodící čáry">＋</button>
       <button class="btn" id="dlBtn" onclick="download()">⬇️ Stáhnout PNG</button>
     </div>
@@ -476,541 +228,16 @@ footer a { color: var(--accent); text-decoration: none; }
 </div>
 
 <footer>
-  <!-- Update href to your GitHub repo URL -->
   <a href="https://github.com/maacoun/appshot" target="_blank" rel="noopener">AppShot</a>
-  — open source, zdarma, vše běží lokálně v prohlížeči
+  <span data-i18n="footer_tagline">— open source, zdarma, vše běží lokálně v prohlížeči</span>
 </footer>
 
-<script>
-/* ═══════════════════════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════════════════════ */
-let img = null, allFiles = [], curIdx = 0;
-let targetW = 1290, targetH = 2796;
-let mode = 'pad';
-let bgValue = '#000000';
-let bgImg = null;
-let phoneScale = 0.72, phonePosY = 0.5;
-
-// Text layers
-let layers = [], selId = null, layerSeq = 0;
-
-// Drag state for canvas interaction
-let drag = null; // { id, startMX, startMY, origX, origY }
-
-/* ═══════════════════════════════════════════════════════════
-   GRADIENTS
-═══════════════════════════════════════════════════════════ */
-const GRADS = {
-  grad1: ['#0f2027','#203a43','#2c5364'],
-  grad2: ['#c94b4b','#4b134f'],
-  grad3: ['#134e5e','#71b280'],
-  grad4: ['#4a00e0','#8e2de2'],
-  grad5: ['#232526','#414345'],
-};
-
-/* ═══════════════════════════════════════════════════════════
-   CANVAS
-═══════════════════════════════════════════════════════════ */
-const canvas = document.getElementById('canvas');
-const ctx    = canvas.getContext('2d');
-
-/* ═══════════════════════════════════════════════════════════
-   FILE / DROP
-═══════════════════════════════════════════════════════════ */
-const dz = document.getElementById('dropZone');
-const fi = document.getElementById('fileInput');
-
-dz.onclick = e => { if (e.target !== fi) fi.click(); };
-fi.onchange = e => loadFiles(e.target.files);
-dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
-dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); loadFiles(e.dataTransfer.files); });
-
-document.getElementById('bgImgInput').onchange = e => {
-  const f = e.target.files[0]; if (!f) return;
-  const url = URL.createObjectURL(f);
-  const t = new Image();
-  t.onload = () => { bgImg = t; rerender(); URL.revokeObjectURL(url); };
-  t.src = url;
-};
-
-function loadFiles(files) {
-  allFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-  if (!allFiles.length) return;
-  curIdx = 0;
-  showUI();
-  loadImg(allFiles[0]);
-}
-
-function showUI() {
-  ['cardDevice','cardMode','cardText'].forEach(id => document.getElementById(id).classList.add('vis'));
-  document.getElementById('placeholder').style.display = 'none';
-  document.getElementById('canvasWrap').style.display = 'inline-block';
-  document.getElementById('btm').style.display = 'flex';
-}
-
-function loadImg(file) {
-  const url = URL.createObjectURL(file);
-  const t = new Image();
-  t.onload = () => { img = t; rerender(); URL.revokeObjectURL(url); };
-  t.src = url;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   DEVICE
-═══════════════════════════════════════════════════════════ */
-function setDevice(el) {
-  document.querySelectorAll('#deviceChips .chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  const w = +el.dataset.w, h = +el.dataset.h;
-  const isCustom = w === 0;
-  document.getElementById('customSizeRow').style.display = isCustom ? 'flex' : 'none';
-  if (!isCustom) { targetW = w; targetH = h; rerender(); }
-}
-
-function applyCustomSize() {
-  const w = parseInt(document.getElementById('customW').value);
-  const h = parseInt(document.getElementById('customH').value);
-  if (w >= 100 && h >= 100) { targetW = w; targetH = h; rerender(); }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   MODE
-═══════════════════════════════════════════════════════════ */
-function setMode(el) {
-  document.querySelectorAll('#modeChips .chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  mode = el.dataset.mode;
-  document.getElementById('scaleRow').style.display = mode === 'phone_on_bg' ? 'block' : 'none';
-  rerender();
-}
-
-/* ═══════════════════════════════════════════════════════════
-   BACKGROUND
-═══════════════════════════════════════════════════════════ */
-function setBgPreset(el, val) {
-  document.querySelectorAll('#bgPresets .chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  bgValue = val;
-  if (val.startsWith('#')) document.getElementById('bgColor').value = val;
-  rerender();
-}
-
-function setBgCustom(val) {
-  bgValue = val;
-  document.querySelectorAll('#bgPresets .chip').forEach(c => c.classList.remove('active'));
-  rerender();
-}
-
-function updateScale(v) {
-  phoneScale = v / 100;
-  document.getElementById('scaleVal').textContent = v + '%';
-  rerender();
-}
-
-function updatePosY(v) {
-  phonePosY = v / 100;
-  document.getElementById('posYVal').textContent = v < 35 ? 'nahoru' : v > 65 ? 'dolů' : 'střed';
-  rerender();
-}
-
-/* ═══════════════════════════════════════════════════════════
-   TEXT LAYERS
-═══════════════════════════════════════════════════════════ */
-function makeLayer() {
-  return {
-    id: ++layerSeq,
-    text: 'Váš text',
-    x: 0.5, y: 0.5,
-    fontSize: 0.05,           // fraction of targetH
-    fontFamily: 'system-ui,sans-serif',
-    color: '#ffffff',
-    shadowColor: '#000000',
-    bold: true, italic: false,
-    shadow: true, stroke: false,
-    align: 'center',
-    opacity: 1,
-  };
-}
-
-function addLayer() {
-  const l = makeLayer();
-  layers.push(l);
-  selId = l.id;
-  renderList();
-  renderEditPanel();
-  rerender();
-}
-
-function deleteLayer(id) {
-  layers = layers.filter(l => l.id !== id);
-  if (selId === id) selId = layers.length ? layers[layers.length - 1].id : null;
-  renderList();
-  renderEditPanel();
-  rerender();
-}
-
-function selLayer(id) {
-  selId = id;
-  renderList();
-  renderEditPanel();
-}
-
-function getSel() { return layers.find(l => l.id === selId) || null; }
-
-function renderList() {
-  const list = document.getElementById('layerList');
-  list.innerHTML = '';
-  layers.forEach(l => {
-    const el = document.createElement('div');
-    el.className = 'layer-item' + (l.id === selId ? ' sel' : '');
-    el.innerHTML =
-      `<span class="lname">${esc(l.text || '(prázdný)')}</span>` +
-      `<span class="ldel" onclick="event.stopPropagation();deleteLayer(${l.id})">×</span>`;
-    el.onclick = () => selLayer(l.id);
-    list.appendChild(el);
-  });
-}
-
-function esc(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function renderEditPanel() {
-  const panel = document.getElementById('editPanel');
-  const l = getSel();
-  if (!l) { panel.classList.remove('vis'); return; }
-  panel.classList.add('vis');
-
-  document.getElementById('epText').value = l.text;
-  document.getElementById('epFont').value = l.fontFamily;
-  document.getElementById('epSize').value  = l.fontSize * 100;
-  document.getElementById('epSizeVal').textContent = Math.round(l.fontSize * 100) + '%';
-  document.getElementById('epColor').value = l.color;
-  document.getElementById('epShadowColor').value = l.shadowColor || '#000000';
-  document.getElementById('epOpacity').value = Math.round(l.opacity * 100);
-  document.getElementById('epOpVal').textContent  = Math.round(l.opacity * 100) + '%';
-
-  document.getElementById('btnB').classList.toggle('active',  l.bold);
-  document.getElementById('btnI').classList.toggle('active',  l.italic);
-  document.getElementById('btnSh').classList.toggle('active', l.shadow);
-  document.getElementById('btnStr').classList.toggle('active',l.stroke);
-
-  document.getElementById('btnAL').classList.toggle('active', l.align === 'left');
-  document.getElementById('btnAC').classList.toggle('active', l.align === 'center');
-  document.getElementById('btnAR').classList.toggle('active', l.align === 'right');
-}
-
-function updateLayer(prop, val) {
-  const l = getSel(); if (!l) return;
-  l[prop] = val;
-  if (prop === 'text') renderList();
-  rerender();
-}
-
-function toggleProp(prop) {
-  const l = getSel(); if (!l) return;
-  l[prop] = !l[prop];
-  renderEditPanel();
-  rerender();
-}
-
-function setAlign(a) {
-  const l = getSel(); if (!l) return;
-  l.align = a;
-  renderEditPanel();
-  rerender();
-}
-
-function setPos(el) {
-  const l = getSel(); if (!l) return;
-  l.x = parseFloat(el.dataset.px);
-  l.y = parseFloat(el.dataset.py);
-  document.querySelectorAll('.pos-cell').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  rerender();
-}
-
-/* ═══════════════════════════════════════════════════════════
-   CANVAS INTERACTION (drag text)
-═══════════════════════════════════════════════════════════ */
-function cvCoords(e) {
-  const r = canvas.getBoundingClientRect();
-  const sx = targetW / r.width, sy = targetH / r.height;
-  const cx = e.touches ? e.touches[0].clientX : e.clientX;
-  const cy = e.touches ? e.touches[0].clientY : e.clientY;
-  return { x: (cx - r.left) * sx, y: (cy - r.top) * sy };
-}
-
-function hitTest(l, mx, my) {
-  const ps = l.fontSize * targetH;
-  const lines = l.text.split('\n');
-  const lh = ps * 1.3, th = lines.length * lh;
-  const maxLen = Math.max(...lines.map(s => s.length), 1);
-  const aw = maxLen * ps * 0.58;
-  const cx = l.x * targetW, cy = l.y * targetH;
-  const bx = l.align === 'center' ? cx - aw/2 : l.align === 'right' ? cx - aw : cx;
-  return mx >= bx - 16 && mx <= bx + aw + 16 && my >= cy - th/2 - 10 && my <= cy + th/2 + 10;
-}
-
-canvas.addEventListener('mousedown',  onDown);
-canvas.addEventListener('touchstart', onDown, { passive: false });
-
-function onDown(e) {
-  e.preventDefault();
-  const { x: mx, y: my } = cvCoords(e);
-  for (let i = layers.length - 1; i >= 0; i--) {
-    if (hitTest(layers[i], mx, my)) {
-      selId = layers[i].id;
-      drag = { id: layers[i].id, startMX: mx, startMY: my, origX: layers[i].x, origY: layers[i].y };
-      canvas.classList.add('grabbing');
-      renderList();
-      renderEditPanel();
-      rerender();
-      return;
-    }
-  }
-  selId = null;
-  renderList();
-  renderEditPanel();
-  rerender();
-}
-
-document.addEventListener('mousemove',  onMove);
-document.addEventListener('touchmove',  onMove, { passive: false });
-
-function onMove(e) {
-  if (!drag) return;
-  e.preventDefault();
-  const { x: mx, y: my } = cvCoords(e);
-  const l = layers.find(l => l.id === drag.id); if (!l) return;
-
-  let nx = Math.max(0, Math.min(1, drag.origX + (mx - drag.startMX) / targetW));
-  let ny = Math.max(0, Math.min(1, drag.origY + (my - drag.startMY) / targetH));
-
-  // Snap threshold: 10 display-pixels converted to canvas fraction
-  const rect = canvas.getBoundingClientRect();
-  const thX = 10 / rect.width;
-  const thY = 10 / rect.height;
-
-  const snapX = Math.abs(nx - 0.5) < thX;
-  const snapY = Math.abs(ny - 0.5) < thY;
-  if (snapX) nx = 0.5;
-  if (snapY) ny = 0.5;
-
-  l.x = nx; l.y = ny;
-
-  const wrap = document.getElementById('canvasWrap');
-  wrap.classList.toggle('snap-x', snapX);
-  wrap.classList.toggle('snap-y', snapY);
-
-  document.querySelectorAll('.pos-cell').forEach(c => c.classList.remove('active'));
-  rerender();
-}
-
-document.addEventListener('mouseup',  onUp);
-document.addEventListener('touchend', onUp);
-
-function onUp() {
-  drag = null;
-  canvas.classList.remove('grabbing');
-  canvas.classList.toggle('grab', layers.length > 0);
-  const wrap = document.getElementById('canvasWrap');
-  wrap.classList.remove('snap-x', 'snap-y');
-}
-
-canvas.addEventListener('mousemove', e => {
-  if (drag) return;
-  const { x: mx, y: my } = cvCoords(e);
-  const hovering = layers.some(l => hitTest(l, mx, my));
-  canvas.classList.toggle('grab', hovering);
-});
-
-/* ═══════════════════════════════════════════════════════════
-   RENDER
-═══════════════════════════════════════════════════════════ */
-function drawBg() {
-  if (bgValue === 'bgimg' && bgImg) {
-    const sc = Math.max(targetW / bgImg.width, targetH / bgImg.height);
-    ctx.drawImage(bgImg, (targetW - bgImg.width*sc)/2, (targetH - bgImg.height*sc)/2, bgImg.width*sc, bgImg.height*sc);
-    return;
-  }
-  if (GRADS[bgValue]) {
-    const stops = GRADS[bgValue];
-    const g = ctx.createLinearGradient(0, 0, 0, targetH);
-    stops.forEach((c, i) => g.addColorStop(i / (stops.length - 1), c));
-    ctx.fillStyle = g;
-  } else {
-    ctx.fillStyle = bgValue.startsWith('#') ? bgValue : '#000';
-  }
-  ctx.fillRect(0, 0, targetW, targetH);
-}
-
-function rrect(x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x+r, y);
-  ctx.lineTo(x+w-r, y);   ctx.quadraticCurveTo(x+w, y,   x+w, y+r);
-  ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-  ctx.lineTo(x+r, y+h);   ctx.quadraticCurveTo(x,   y+h, x, y+h-r);
-  ctx.lineTo(x, y+r);     ctx.quadraticCurveTo(x,   y,   x+r, y);
-  ctx.closePath();
-}
-
-function drawTextLayers() {
-  for (const l of layers) {
-    const ps = l.fontSize * targetH;
-    const lines = l.text.split('\n');
-    const lh = ps * 1.3;
-    const totalH = lines.length * lh;
-    const px = l.x * targetW;
-    const py = l.y * targetH - totalH/2 + lh/2;
-
-    ctx.save();
-    ctx.globalAlpha = l.opacity;
-    ctx.font = `${l.italic?'italic ':''}${l.bold?'bold ':''}${ps}px ${l.fontFamily}`;
-    ctx.textAlign  = l.align;
-    ctx.textBaseline = 'middle';
-
-    lines.forEach((line, i) => {
-      const ly = py + i * lh;
-
-      if (l.shadow) {
-        ctx.shadowColor   = l.shadowColor || 'rgba(0,0,0,0.7)';
-        ctx.shadowBlur    = ps * 0.35;
-        ctx.shadowOffsetY = ps * 0.04;
-      } else {
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-      }
-
-      ctx.fillStyle = l.color;
-      ctx.fillText(line, px, ly);
-
-      if (l.stroke) {
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = l.color === '#ffffff' ? '#000' : '#fff';
-        ctx.lineWidth = ps * 0.04;
-        ctx.strokeText(line, px, ly);
-      }
-    });
-    ctx.restore();
-
-    // Selection indicator
-    if (l.id === selId) {
-      ctx.save();
-      ctx.globalAlpha = 0.55;
-      ctx.strokeStyle = '#4a90e2';
-      ctx.lineWidth   = Math.max(3, targetW * 0.003);
-      ctx.setLineDash([targetW * 0.012, targetW * 0.009]);
-      const maxLen = Math.max(...lines.map(s => s.length), 1);
-      const aw = maxLen * ps * 0.58;
-      const cx = l.x * targetW;
-      const cy = l.y * targetH;
-      const bx = l.align === 'center' ? cx - aw/2 : l.align === 'right' ? cx - aw : cx;
-      ctx.strokeRect(bx - 16, cy - totalH/2 - 12, aw + 32, totalH + 24);
-      ctx.restore();
-    }
-  }
-}
-
-function rerender() {
-  if (!img) return;
-  canvas.width = targetW; canvas.height = targetH;
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  drawBg();
-
-  if (mode === 'pad') {
-    const sc = Math.min(targetW / img.width, targetH / img.height);
-    const w = img.width*sc, h = img.height*sc;
-    ctx.drawImage(img, (targetW-w)/2, (targetH-h)/2, w, h);
-
-  } else if (mode === 'phone_on_bg') {
-    const sc = Math.min((targetW*phoneScale) / img.width, (targetH*phoneScale) / img.height);
-    const w = img.width*sc, h = img.height*sc;
-    const x = (targetW - w) / 2, y = (targetH - h) * phonePosY;
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.shadowBlur  = targetW * 0.05;
-    ctx.shadowOffsetY = targetH * 0.008;
-    rrect(x, y, w, h, w * 0.07); ctx.clip();
-    ctx.drawImage(img, x, y, w, h);
-    ctx.restore();
-
-  } else if (mode === 'stretch') {
-    ctx.drawImage(img, 0, 0, targetW, targetH);
-
-  } else if (mode === 'crop') {
-    const sc = Math.max(targetW / img.width, targetH / img.height);
-    const w = img.width*sc, h = img.height*sc;
-    ctx.drawImage(img, (targetW-w)/2, (targetH-h)/2, w, h);
-  }
-
-  drawTextLayers();
-  updateInfo();
-}
-
-function updateInfo() {
-  const multi = allFiles.length > 1;
-  document.getElementById('prevBtn').style.display = multi ? '' : 'none';
-  document.getElementById('nextBtn').style.display = multi ? '' : 'none';
-  document.getElementById('infoTxt').textContent =
-    `${targetW} × ${targetH} px${multi ? `  •  ${curIdx+1} / ${allFiles.length}` : ''}`;
-  document.getElementById('dlBtn').textContent = multi
-    ? `⬇️ Stáhnout všechny (${allFiles.length})` : '⬇️ Stáhnout PNG';
-}
-
-/* ═══════════════════════════════════════════════════════════
-   NAVIGATION
-═══════════════════════════════════════════════════════════ */
-function navImg(dir) {
-  curIdx = (curIdx + dir + allFiles.length) % allFiles.length;
-  loadImg(allFiles[curIdx]);
-}
-
-/* ═══════════════════════════════════════════════════════════
-   DOWNLOAD
-═══════════════════════════════════════════════════════════ */
-async function download() {
-  if (allFiles.length === 1) { doDownload(allFiles[0].name); return; }
-  const savedIdx = curIdx, savedImg = img;
-  for (let i = 0; i < allFiles.length; i++) {
-    curIdx = i;
-    await loadImgAsync(allFiles[i]);
-    rerender();
-    doDownload(allFiles[i].name);
-    await sleep(120);
-  }
-  curIdx = savedIdx; img = savedImg;
-  rerender();
-}
-
-function loadImgAsync(file) {
-  return new Promise(res => {
-    const url = URL.createObjectURL(file);
-    const t = new Image();
-    t.onload = () => { img = t; URL.revokeObjectURL(url); res(); };
-    t.src = url;
-  });
-}
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-function toggleGuides() {
-  const wrap = document.getElementById('canvasWrap');
-  const btn  = document.getElementById('guidesBtn');
-  const on   = wrap.classList.toggle('guides-on');
-  btn.style.borderColor = on ? 'var(--accent)' : '';
-  btn.style.color       = on ? '#fff' : '';
-}
-
-function doDownload(origName) {
-  const a = document.createElement('a');
-  a.download = `appshot_${targetW}x${targetH}_${origName.replace(/\.[^.]+$/, '')}.png`;
-  a.href = canvas.toDataURL('image/png');
-  a.click();
-}
-</script>
+<script src="translations/cs.js"></script>
+<script src="translations/en.js"></script>
+<script src="translations/de.js"></script>
+<script src="translations/fr.js"></script>
+<script src="translations/es.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
